@@ -2,7 +2,7 @@ name: Update km_company
 
 on:
   schedule:
-    - cron:  '0 0 * * *'
+    - cron:  "*/5 * * * *"
 
 jobs:
   update:
@@ -31,7 +31,11 @@ jobs:
 
     - name: Execute notebook
       run: |
-        papermill Export_to_json.ipynb Export_to_json_output.ipynb
+        papermill "KM Extract.ipynb" output.ipynb
+
+    - name: Delete output notebook
+      run: |
+        rm output.ipynb
 
     - name: Commit and push if it changed
       run: |
