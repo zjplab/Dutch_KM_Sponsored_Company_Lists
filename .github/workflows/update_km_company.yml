@@ -2,7 +2,7 @@ name: Update km_company
 
 on:
   schedule:
-    - cron:  "*/5 * * * *"
+    - cron:  "0 12 * * *"
 
 jobs:
   update:
