@@ -1,0 +1,137 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/zjplab/Dutch_KM_Sponsored_Company_Lists/blob/main/KM%20Extract\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "%%capture\n",
+        "!pip install pandas\n",
+        "!pip install beautifulsoup4"
+      ],
+      "metadata": {
+        "id": "fo6o90aZaMqO"
+      },
+      "execution_count": 1,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 2,
+      "metadata": {
+        "id": "lIYdn1woOS1n"
+      },
+      "outputs": [],
+      "source": [
+        "import requests\n",
+        "from bs4 import BeautifulSoup\n",
+        "import pandas as pd\n",
+        "\n",
+        "def scrape_page(url):\n",
+        "    response = requests.get(url)\n",
+        "    soup = BeautifulSoup(response.text, 'html.parser')\n",
+        "\n",
+        "    names = []\n",
+        "    numbers = []\n",
+        "\n",
+        "    for row in soup.find_all('tr'):\n",
+        "        columns = row.find_all('td')\n",
+        "        if len(columns) >= 2:\n",
+        "            names.append(columns[0].text.strip())\n",
+        "            numbers.append(columns[1].text.strip())\n",
+        "\n",
+        "    df = pd.DataFrame({\n",
+        "        'Name': names,\n",
+        "        'Number': numbers,\n",
+        "    })\n",
+        "\n",
+        "    return df\n",
+        "\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def filter_df(df):\n",
+        "  return df[df['Number'].str.isnumeric()]"
+      ],
+      "metadata": {
+        "id": "xzcK3mapYlsd"
+      },
+      "execution_count": 3,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "urls=[\"https://ind.nl/en/public-register-regular-labour-and-highly-skilled-migrants\", \\\n",
+        "      \"https://ind.nl/en/public-register-au-pair-and-exchange\",\\\n",
+        "      \"https://ind.nl/en/public-register-au-pair-and-exchange\", \\\n",
+        "      \"https://ind.nl/en/public-register-scientific-researcher-directive-eu-2016801\"]\n",
+        "dfs=[]\n",
+        "for url in urls:\n",
+        "  df = scrape_page(url)\n",
+        "  df = filter_df(df)\n",
+        "  dfs.append(df)\n",
+        "\n",
+        "  "
+      ],
+      "metadata": {
+        "id": "dxItQw1rX3u9"
+      },
+      "execution_count": 4,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "result = {\"sponsors\": []}\n",
+        "for df in dfs:\n",
+        "  result[\"sponsors\"]+=df.Name.values.tolist()"
+      ],
+      "metadata": {
+        "id": "Ge9vkWTbZMpH"
+      },
+      "execution_count": 5,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import json\n",
+        "# Convert the dictionary to a JSON string\n",
+        "json_data = json.dumps(result)\n",
+        "\n",
+        "# Save the JSON string to a file\n",
+        "with open(\"km_company.json\", \"w\") as file:\n",
+        "    file.write(json_data)"
+      ],
+      "metadata": {
+        "id": "u5161Q3NZ97Z"
+      },
+      "execution_count": 6,
+      "outputs": []
+    }
+  ],
+  "metadata": {
+    "colab": {
+      "name": "scratchpad",
+      "provenance": [],
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "display_name": "Python 3",
+      "name": "python3"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}
