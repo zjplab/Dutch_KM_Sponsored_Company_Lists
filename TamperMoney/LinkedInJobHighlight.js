@@ -5,7 +5,7 @@
 // @description  Check if LinkedIn job company is in IND km sponsor list
 // @author       JP Zhang
 // @match        https://www.linkedin.com/jobs/*
-// @grant        none
+// @grant        GM_xmlhttpRequest
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js
 // ==/UserScript==
 
@@ -13,43 +13,48 @@
     'use strict';
 
     // Fetch the IND km sponsor list (supposed to be a JSON file)
-    $.getJSON('https://raw.githubusercontent.com/zjplab/Dutch_KM_Sponsored_Company_Lists/main/km_company.json', function(indCompanies) {
+    GM_xmlhttpRequest({
+        method: "GET",
+        url: "https://raw.githubusercontent.com/zjplab/Dutch_KM_Sponsored_Company_Lists/main/km_company.json",
+        onload: function(response) {
+            let indCompanies = JSON.parse(response.responseText);
 
-        // Run the check every 5 seconds
-        setInterval(function() {
-            // Find all company names in the page
-            $('a.ember-view.t-black.t-normal').each(function() {
-                let companyName = $(this).text().trim().toLowerCase();
-                let location = $(this).closest('.jobs-unified-top-card__subtitle-primary-grouping')
-                .find('.jobs-unified-top-card__bullet').text().trim();
-                if (location.includes('Netherlands')) {
-                    let companyLink = $(this); // Save the jQuery object for the company name link
+            // Run the check every 5 seconds
+            setInterval(function() {
+                // Find all company names in the page
+                $('a.ember-view.t-black.t-normal').each(function() {
+                    let companyName = $(this).text().trim().toLowerCase();
+                    let location = $(this).closest('.jobs-unified-top-card__subtitle-primary-grouping')
+                    .find('.jobs-unified-top-card__bullet').text().trim();
+                    if (location.includes('Netherlands')) {
+                        let companyLink = $(this); // Save the jQuery object for the company name link
 
-                    console.time("Matching time"); // Start timer
+                        console.time("Matching time"); // Start timer
 
-                    let matched = indCompanies.sponsors.some(function(sponsor) {
-                        if (isKMismatchSubstring(companyName, sponsor.toLowerCase(), 3)) {
-                            // The company name is a K-mismatch substring of this company,
+                        let matched = indCompanies.sponsors.some(function(sponsor) {
+                            if (isKMismatchSubstring(companyName, sponsor.toLowerCase(), 3)) {
+                                // The company name is a K-mismatch substring of this company,
+                                // so you can change the CSS as needed.
+                                companyLink.css('font-weight', 'bold');
+                                companyLink.css('color', 'green');
+                                return true;
+                            }
+                            return false;
+                        });
+
+                        console.timeEnd("Matching time"); // End timer and log time
+
+                        if (!matched) {
+                            // The company name did not match any sponsor,
                             // so you can change the CSS as needed.
+                            console.log("Not matched!");
                             companyLink.css('font-weight', 'bold');
-                            companyLink.css('color', 'green');
-                            return true;
+                            companyLink.css('color', 'red');
                         }
-                        return false;
-                    });
-
-                    console.timeEnd("Matching time"); // End timer and log time
-
-                    if (!matched) {
-                        // The company name did not match any sponsor,
-                        // so you can change the CSS as needed.
-                        console.log("Not matched!");
-                        companyLink.css('font-weight', 'bold');
-                        companyLink.css('color', 'red');
                     }
-                }
-            });
-        }, 5000);
+                });
+            }, 5000);
+        }
     });
 })();
 
