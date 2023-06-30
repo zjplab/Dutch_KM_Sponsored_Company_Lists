@@ -21,42 +21,49 @@
 
             // Run the check every 5 seconds
             setInterval(function() {
-                // Find all company names in the page
-                $('a.ember-view.t-black.t-normal').each(function() {
-                    let companyName = $(this).text().trim().toLowerCase();
-                    let location = $(this).closest('.jobs-unified-top-card__subtitle-primary-grouping')
-                    .find('.jobs-unified-top-card__bullet').text().trim();
-                    if (location.includes('Netherlands')) {
-                        let companyLink = $(this); // Save the jQuery object for the company name link
+                // Find the company name and location in the page
+                let companyNameElement = document.querySelector(".jobs-unified-top-card__primary-description a.app-aware-link");
+                let companyName = companyNameElement.textContent.trim().toLowerCase();
 
-                        console.time("Matching time"); // Start timer
+                let parentContent = companyNameElement.parentElement.textContent;
+                let locationAndTime = parentContent.split("·")[1];
+                let location = locationAndTime.replace(/(\d+ (day|week|month|minute)s? ago).*/, "").trim();
 
-                        let matched = indCompanies.sponsors.some(function(sponsor) {
-                            if (isKMismatchSubstring(companyName, sponsor.toLowerCase(), 3)) {
-                                // The company name is a K-mismatch substring of this company,
-                                // so you can change the CSS as needed.
-                                companyLink.css('font-weight', 'bold');
-                                companyLink.css('color', 'green');
-                                return true;
-                            }
-                            return false;
-                        });
+                // Print the company name and location
+                console.log("Company name: " + companyName);
+                console.log("Location: " + location);
 
-                        console.timeEnd("Matching time"); // End timer and log time
+                if (location.includes('Netherlands') || location.includes('荷兰') || location.includes('尼德兰') || location.includes('Amsterdam Area')) {
+                    let companyLink = companyNameElement; // Save the object for the company name link
 
-                        if (!matched) {
-                            // The company name did not match any sponsor,
+                    console.time("Matching time"); // Start timer
+
+                    let matched = indCompanies.sponsors.some(function(sponsor) {
+                        if (isKMismatchSubstring(companyName, sponsor.toLowerCase(), 3)) {
+                            // The company name is a K-mismatch substring of this company,
                             // so you can change the CSS as needed.
-                            console.log("Not matched!");
-                            companyLink.css('font-weight', 'bold');
-                            companyLink.css('color', 'red');
+                            companyLink.style.fontWeight = 'bold';
+                            companyLink.style.color = 'green';
+                            return true;
                         }
+                        return false;
+                    });
+
+                    console.timeEnd("Matching time"); // End timer and log time
+
+                    if (!matched) {
+                        // The company name did not match any sponsor,
+                        // so you can change the CSS as needed.
+                        console.log("Not matched!");
+                        companyLink.style.fontWeight = 'bold';
+                        companyLink.style.color = 'red';
                     }
-                });
+                }
             }, 5000);
         }
     });
 })();
+
 
 function isKMismatchSubstring(query, text, k) {
     let m = query.length;
