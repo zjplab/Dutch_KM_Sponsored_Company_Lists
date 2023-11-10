@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         LinkedIn Company Matcher
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  Check if LinkedIn job company is in IND km sponsor list
 // @author       JP Zhang
 // @match        https://www.linkedin.com/jobs/*
@@ -21,13 +21,18 @@
 
             // Run the check every 5 seconds
             setInterval(function() {
-                // Find the company name and location in the page
-                let companyNameElement = document.querySelector(".jobs-unified-top-card__primary-description a.app-aware-link");
+                // Find the company name in the page
+                let companyNameElement = document.querySelector(".job-details-jobs-unified-top-card__primary-description a.app-aware-link");
+                if (!companyNameElement) {
+                    console.log("Company name element not found");
+                    return;
+                }
                 let companyName = companyNameElement.textContent.trim().toLowerCase();
 
+                // Find the location in the page
                 let parentContent = companyNameElement.parentElement.textContent;
                 let locationAndTime = parentContent.split("·")[1];
-                let location = locationAndTime.replace(/(\d+ (day|week|month|minute)s? ago).*/, "").trim();
+                let location = locationAndTime.split("·")[0].trim(); // Extracting only the location part
 
                 // Print the company name and location
                 console.log("Company name: " + companyName);
@@ -63,7 +68,6 @@
         }
     });
 })();
-
 
 function isKMismatchSubstring(query, text, k) {
     let m = query.length;
